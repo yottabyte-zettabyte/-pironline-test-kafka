@@ -1,0 +1,27 @@
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Intellij
+.idea/
+*.iml
+*.iws
+
+# Mac
+.DS_Store
+
+# Maven
+log/
+logs/
+target/
+src/main/webapp/WEB-INF/classes/
+prod_settings/
+phantomjsdriver.log
+dependency-reduced-pom.xml
+
+#NetBeans
+nb-configuration.xml
+nbactions.xml
+faces-config.NavData
