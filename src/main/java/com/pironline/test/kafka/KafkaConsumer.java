@@ -15,8 +15,8 @@ public class KafkaConsumer {
             topics = "${spring.kafka.topic.config}",
             groupId = "${spring.kafka.groupId}",
             autoStartup = "${spring.kafka.consumer.listener.enabled}",
-            concurrency = "${spring.kafka.listener.concurrency}",
-            containerFactory = "pironlineConsumerFactory"
+            concurrency = "${spring.kafka.consumer.listener.concurrency}",
+            containerFactory = "pironlineListenerContainerFactory"
     )
     public void messageListener(DebeziumDto debeziumDto) {
         System.out.println("Topic - "+ topic + ", DebeziumDto - " + debeziumDto);
