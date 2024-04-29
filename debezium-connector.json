@@ -1,0 +1,19 @@
+{
+  "name": "test-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "plugin.name": "pgoutput",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "testadmin",
+    "database.password": "adminpwd",
+    "database.dbname" : "test",
+    "database.server.name": "my_db_server",
+    "topic.prefix": "pironline",
+    "heartbeat.interval.ms": "5000",
+    "table.include.list": "public.companies,public.employees",
+    "publication.name": "pironline",
+    "replica.identity.autoset.values": "public.companies:FULL,public.employees:FULL"
+  }
+}
+
