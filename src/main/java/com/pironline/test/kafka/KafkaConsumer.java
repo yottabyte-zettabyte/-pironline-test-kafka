@@ -1,7 +1,7 @@
 package com.pironline.test.kafka;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.JsonParseException;
 import com.pironline.test.models.cdc.CompanyCdcEvent;
 import com.pironline.test.models.cdc.EmployeeCdcEvent;
 import com.pironline.test.services.HistoryLogService;
@@ -34,7 +34,7 @@ public class KafkaConsumer {
         CompanyCdcEvent cdcEvent;
         try {
             cdcEvent = gsonService.fromJson(data, CompanyCdcEvent.class);
-        } catch(final JsonSyntaxException ex) {
+        } catch(final JsonParseException ex) {
             log.error("Error while parsing company cdc json: ", ex);
             return;
         }
@@ -56,7 +56,7 @@ public class KafkaConsumer {
         EmployeeCdcEvent cdcEvent;
         try {
             cdcEvent = gsonService.fromJson(data, EmployeeCdcEvent.class);
-        } catch(final JsonSyntaxException ex) {
+        } catch(final JsonParseException ex) {
             log.error("Error while parsing employee cdc json: ", ex);
             return;
         }
