@@ -12,8 +12,10 @@
     "topic.prefix": "pironline",
     "heartbeat.interval.ms": "5000",
     "table.include.list": "public.companies,public.employees",
+    "column.exclude.list": "public.companies.version,public.companies.created_at,public.companies.updated_at,public.employees.version,public.employees.created_at,public.employees.updated_at",
     "publication.name": "pironline",
-    "replica.identity.autoset.values": "public.companies:FULL,public.employees:FULL"
+    "replica.identity.autoset.values": "public.companies:FULL,public.employees:FULL",
+    "time.precision.mode": "connect"
   }
 }
 

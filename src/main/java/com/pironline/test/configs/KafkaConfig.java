@@ -22,7 +22,7 @@ public class KafkaConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
-    
+
     @Value("${spring.kafka.consumer.partition.assignment.strategy}")
     private String partitionAssignmentStrategy;
 
