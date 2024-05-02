@@ -4,6 +4,7 @@ import com.pironline.test.enums.OperationType;
 import com.pironline.test.models.cdc.CdcEvent;
 import com.pironline.test.models.pojo.Identifiable;
 import com.pironline.test.persistences.HistoryLog;
+import com.pironline.test.persistences.HistoryLogValue;
 import java.lang.reflect.Field;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -37,18 +38,18 @@ public class HistoryLogService {
             if (OperationType.UPDATE.getOp().equals(cdcEvent.getPayload().getOp())) {
                 Identifiable before = cdcEvent.getPayload().getBefore();
                 Identifiable after = cdcEvent.getPayload().getAfter();
-                List<HistoryLog> historyLogs = getUpdateHistory(before, after, tableName, before.getId().toString());
-                saveHistoryLogs(historyLogs);
+                HistoryLog historyLog = getUpdateHistory(before, after, tableName, before.getId().toString());
+                saveHistoryLogs(historyLog);
             }
             else if (OperationType.INSERT.getOp().equals(cdcEvent.getPayload().getOp())) {
                 Identifiable after = cdcEvent.getPayload().getAfter();
-                List<HistoryLog> historyLogs = getNonUpdateHistory(OperationType.INSERT, after, tableName, after.getId().toString());
-                saveHistoryLogs(historyLogs);
+                HistoryLog historyLog = getNonUpdateHistory(OperationType.INSERT, after, tableName, after.getId().toString());
+                saveHistoryLogs(historyLog);
             }
             else if (OperationType.DELETE.getOp().equals(cdcEvent.getPayload().getOp())) {
                 Identifiable before = cdcEvent.getPayload().getBefore();
-                List<HistoryLog> historyLogs = getNonUpdateHistory(OperationType.DELETE, before, tableName, before.getId().toString());
-                saveHistoryLogs(historyLogs);
+                HistoryLog historyLog = getNonUpdateHistory(OperationType.DELETE, before, tableName, before.getId().toString());
+                saveHistoryLogs(historyLog);
             }
         }
         catch (final Exception ex) {
@@ -56,8 +57,8 @@ public class HistoryLogService {
         }
     }
 
-    private List<HistoryLog> getUpdateHistory(Object before, Object after, String tableName, String objectId) throws IllegalAccessException {
-        List<HistoryLog> historyLogs = new ArrayList<>();
+    private HistoryLog getUpdateHistory(Object before, Object after, String tableName, String objectId) throws IllegalAccessException {
+        List<HistoryLogValue> historyLogValues = new ArrayList<>();
 
         for (Field beforeField : before.getClass().getDeclaredFields()) {
             for (Field afterField : after.getClass().getDeclaredFields()) {
@@ -69,51 +70,63 @@ public class HistoryLogService {
                     Object newValue = afterField.get(after);
 
                     if (!Objects.equals(oldValue, newValue)) {
-                        HistoryLog historyLog = HistoryLog
+                        HistoryLogValue historyLogValue = HistoryLogValue
                                 .builder()
-                                .logType(OperationType.UPDATE.getLogType())
-                                .tableId(tableName)
                                 .fieldId(beforeField.getName())
-                                .objectId(objectId)
                                 .newValue(Objects.nonNull(newValue) ? newValue.toString() : null)
                                 .oldValue(Objects.nonNull(oldValue) ? oldValue.toString() : null)
-                                .createdAt(LocalDateTime.now(clock))
                                 .build();
-                        historyLogs.add(historyLog);
+                        historyLogValues.add(historyLogValue);
                     }
                     break;
                 }
             }
         }
-        return historyLogs;
+
+        if (!CollectionUtils.isEmpty(historyLogValues)) {
+            return HistoryLog
+                .builder()
+                .logType(OperationType.UPDATE.getLogType())
+                .tableId(tableName)
+                .objectId(objectId)
+                .createdAt(LocalDateTime.now(clock))
+                .values(historyLogValues)
+                .build();
+        }
+        else {
+            return null;
+        }
     }
 
-    private List<HistoryLog> getNonUpdateHistory(OperationType operationType, Object payload, String tableName, String objectId) throws IllegalAccessException {
-        List<HistoryLog> historyLogs = new ArrayList<>();
-
+    private HistoryLog getNonUpdateHistory(OperationType operationType, Object payload, String tableName, String objectId) throws IllegalAccessException {
+        List<HistoryLogValue> historyLogValues = new ArrayList<>();
         for (Field field : payload.getClass().getDeclaredFields()) {
             field.setAccessible(true);
             Object newValue = (operationType == OperationType.INSERT) ? field.get(payload) : null;
             Object oldValue = (operationType == OperationType.DELETE) ? field.get(payload) : null;
 
-            HistoryLog historyLog = HistoryLog
+            HistoryLogValue historyLogValue = HistoryLogValue
                     .builder()
-                    .logType(operationType.getLogType())
-                    .tableId(tableName)
                     .fieldId(field.getName())
-                    .objectId(objectId)
                     .newValue(Objects.nonNull(newValue) ? newValue.toString() : null)
                     .oldValue(Objects.nonNull(oldValue) ? oldValue.toString() : null)
-                    .createdAt(LocalDateTime.now(clock))
                     .build();
-            historyLogs.add(historyLog);
+            historyLogValues.add(historyLogValue);
         }
-        return historyLogs;
+
+        return HistoryLog
+                .builder()
+                .logType(operationType.getLogType())
+                .tableId(tableName)
+                .objectId(objectId)
+                .createdAt(LocalDateTime.now(clock))
+                .values(historyLogValues)
+                .build();
     }
 
-    private void saveHistoryLogs(List<HistoryLog> historyLogs) {
-        if (!CollectionUtils.isEmpty(historyLogs)) {
-            historyLogServiceTxn.save(historyLogs);
+    private void saveHistoryLogs(HistoryLog historyLog) {
+        if (Objects.nonNull(historyLog)) {
+            historyLogServiceTxn.save(historyLog);
         }
     }
 }
